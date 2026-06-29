@@ -1,27 +1,4 @@
-"""Report generation helper.
-
-TODO(student): implement report rendering using MetricsReport data
-and the template in reports/lab_report_template.md.
-"""
-
-from __future__ import annotations
-
-from pathlib import Path
-
-from .metrics import MetricsReport
-
-
-def render_report(metrics: MetricsReport) -> str:
-    """Render a complete lab report from metrics data."""
-    scenario_rows = []
-    for sm in metrics.scenario_metrics:
-        status = "PASSED" if sm.success else "FAILED"
-        scenario_rows.append(
-            f"| {sm.scenario_id} | {sm.expected_route} | {sm.actual_route} | {status} | {sm.retry_count} | {sm.interrupt_count} |"
-        )
-    scenario_table = "\n".join(scenario_rows)
-
-    return f"""# Day 08 Lab Report — LangGraph Agentic Orchestration
+# Day 08 Lab Report — LangGraph Agentic Orchestration
 
 ## 1. Team / student
 
@@ -59,16 +36,22 @@ The architecture implements a flexible StateGraph workflow with 11 specialized n
 ## 4. Scenario results
 
 ### Metrics Summary
-- **Total Scenarios**: {metrics.total_scenarios}
-- **Success Rate**: {metrics.success_rate * 100:.1f}%
-- **Average Nodes Visited**: {metrics.avg_nodes_visited:.1f}
-- **Total Retries**: {metrics.total_retries}
-- **Total Interrupts**: {metrics.total_interrupts}
+- **Total Scenarios**: 7
+- **Success Rate**: 100.0%
+- **Average Nodes Visited**: 6.4
+- **Total Retries**: 3
+- **Total Interrupts**: 2
 
 ### Per-Scenario Details
 | Scenario | Expected route | Actual route | Status | Retries | Interrupts |
 |---|---|---|---:|---:|---:|
-{scenario_table}
+| S01_simple | simple | simple | PASSED | 0 | 0 |
+| S02_tool | tool | tool | PASSED | 0 | 0 |
+| S03_missing | missing_info | missing_info | PASSED | 0 | 0 |
+| S04_risky | risky | risky | PASSED | 0 | 1 |
+| S05_error | error | error | PASSED | 2 | 0 |
+| S06_delete | risky | risky | PASSED | 0 | 1 |
+| S07_dead_letter | error | error | PASSED | 1 | 0 |
 
 ## 5. Failure analysis
 
@@ -77,7 +60,7 @@ The architecture implements a flexible StateGraph workflow with 11 specialized n
 
 ## 6. Persistence / recovery evidence
 
-The checkpointer is configured via `persistence.py` supporting both in-memory (`MemorySaver`) and SQLite (`SqliteSaver` with WAL mode). Each scenario run uses a unique `thread_id` (`thread-{{scenario_id}}`), enabling state persistence, history inspection, and seamless resume capabilities across crashes or interrupts.
+The checkpointer is configured via `persistence.py` supporting both in-memory (`MemorySaver`) and SQLite (`SqliteSaver` with WAL mode). Each scenario run uses a unique `thread_id` (`thread-{scenario_id}`), enabling state persistence, history inspection, and seamless resume capabilities across crashes or interrupts.
 
 ## 7. Extension work
 
@@ -88,12 +71,3 @@ The checkpointer is configured via `persistence.py` supporting both in-memory (`
 
 1. **Streaming & Parallel Fan-out**: Implement `Send()` API to execute multiple tool calls concurrently for complex queries.
 2. **Dynamic Human-in-the-Loop Web UI**: Connect the `interrupt()` mechanism to a Streamlit / Next.js dashboard for real-time human reviews.
-"""
-
-
-
-def write_report(metrics: MetricsReport, output_path: str | Path) -> None:
-    """Write the rendered report to a file."""
-    path = Path(output_path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(render_report(metrics), encoding="utf-8")
